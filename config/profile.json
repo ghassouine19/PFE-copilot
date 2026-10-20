@@ -1,0 +1,47 @@
+
+{
+  "candidate": {
+    "degree": "Master BD2C - Big Data & Cloud Computing",
+    "location": "Casablanca, Maroc",
+    "target": "PFE",
+    "languages": ["fr", "en"]
+  },
+  "roles": {
+    "data_engineer": {
+      "label": "Data Engineer",
+      "keywords": [
+        "data engineer", "data engineering", "etl",
+        "elt", "apache spark", "airflow", "sql",
+        "data pipeline", "big data", "cloud", "minio"
+      ],
+      "cv": "cvs/data_engineer.pdf"
+    },
+    "data_scientist": {
+      "label": "Data Scientist",
+      "keywords": [
+        "data scientist", "machine learning",
+        "scikit-learn", "predictive modeling",
+        "statistical learning", "data science"
+      ],
+      "cv": "cvs/data_scientist.pdf"
+    },
+    "bi_analyst": {
+      "label": "BI / Data Analyst",
+      "keywords": [
+        "business intelligence", "power bi",
+        "data analyst", "pentaho", "dashboard",
+        "reporting", "data visualization"
+      ],
+      "cv": "cvs/bi_analyst.pdf"
+    },
+    "ai_engineer": {
+      "label": "AI Engineer",
+      "keywords": [
+        "ai engineer", "artificial intelligence",
+        "deep learning", "mlops", "model deployment",
+        "llm", "intelligent systems"
+      ],
+      "cv": "cvs/ai_engineer.pdf"
+    }
+  }
+}
