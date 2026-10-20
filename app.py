@@ -6,6 +6,8 @@ from src.matcher import match_offer, load_profile
 from src.cv_selector import select_cv
 from src.email_generator import generate_email
 
+from src.job_sources import load_offers_csv
+
 st.set_page_config(
     page_title="PFE Copilot",
     page_icon="🎓",
@@ -20,8 +22,12 @@ st.caption(
     "Assistant de candidature PFE — Master Big Data & Cloud Computing"
 )
 
-tab_new, tab_tracking = st.tabs(
-    ["Nouvelle candidature", "Suivi des candidatures"]
+tab_new, tab_import, tab_tracking = st.tabs(
+    [
+        "Nouvelle candidature",
+        "Importer des offres",
+        "Suivi des candidatures",
+    ]
 )
 
 with tab_new:
@@ -110,6 +116,30 @@ with tab_new:
             "Aucun email n'est envoyé à ce stade. "
             "L'intégration Gmail sera ajoutée après validation du MVP."
         )
+
+
+with tab_import:
+    st.subheader("Importer des offres de PFE")
+
+    uploaded_file = st.file_uploader(
+        "Sélectionner un fichier CSV",
+        type=["csv"],
+        key="offers_csv",
+    )
+
+    if uploaded_file:
+        try:
+            offers = load_offers_csv(uploaded_file)
+            st.success(f"{len(offers)} offre(s) valide(s) importée(s).")
+            st.dataframe(offers, use_container_width=True)
+
+            st.info(
+                "Prochaine étape : enregistrer les offres en base, "
+                "calculer leur score et préparer les emails."
+            )
+
+        except (ValueError, Exception) as exc:
+            st.error(f"Erreur lors de l'import : {exc}")
 
 with tab_tracking:
     st.subheader("Historique des candidatures")
