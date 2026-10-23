@@ -7,12 +7,17 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from bs4 import BeautifulSoup
+
 ROOT = Path(__file__).resolve().parents[1]
 CREDENTIALS_FILE = ROOT / "credentials.json"
 TOKEN_FILE = ROOT / "token.json"
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+]
 
 def get_gmail_service():
     creds = None
@@ -44,18 +49,24 @@ def get_gmail_service():
     return build("gmail", "v1", credentials=creds)
 
 
+
 def decode_part(part: dict) -> str:
+    """Décode le contenu d'une partie MIME Gmail."""
     data = part.get("body", {}).get("data")
 
-    if data:
-        return base64.urlsafe_b64decode(data).decode(
-            "utf-8", errors="replace"
-        )
+    if not data:
+        return ""
 
-    return ""
+    try:
+        padding = "=" * (-len(data) % 4)
+        decoded = base64.urlsafe_b64decode(data + padding)
+        return decoded.decode("utf-8", errors="replace")
+    except (ValueError, TypeError):
+        return ""
 
 
 def extract_message(message: dict) -> dict:
+    """Extrait les métadonnées et le texte d'un e-mail Gmail."""
     payload = message.get("payload", {})
     headers = payload.get("headers", [])
 
@@ -64,28 +75,46 @@ def extract_message(message: dict) -> dict:
         for h in headers
     }
 
-    body_parts = []
+    plain_parts = []
+    html_parts = []
 
-    def walk(part):
-        mime = part.get("mimeType", "")
+    def walk(part: dict):
+        mime = part.get("mimeType", "").lower()
+        content = decode_part(part)
 
-        # Priorité au texte brut, sans récupérer les pièces jointes.
-        if mime == "text/plain":
-            body_parts.append(decode_part(part))
+        if content:
+            if mime == "text/plain":
+                plain_parts.append(content)
+            elif mime == "text/html":
+                html_parts.append(content)
 
         for child in part.get("parts", []):
             walk(child)
 
     walk(payload)
 
+    # Priorité au texte brut.
+    plain_text = "\n".join(plain_parts).strip()
+
+    if plain_text:
+        body_text = plain_text
+    elif html_parts:
+        # Utilise le HTML comme solution de repli.
+        html = "\n".join(html_parts)
+        body_text = BeautifulSoup(html, "html.parser").get_text(
+            separator="\n",
+            strip=True
+        )
+    else:
+        body_text = ""
+
     return {
         "message_id": message.get("id", ""),
         "sender": header_map.get("from", ""),
         "subject": header_map.get("subject", ""),
         "date": header_map.get("date", ""),
-        "body": "\n".join(body_parts).strip(),
+        "body": body_text
     }
-
 
 def search_offer_emails(max_results: int = 20) -> list[dict]:
     service = get_gmail_service()

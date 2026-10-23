@@ -10,4 +10,5 @@ for email in emails:
     print("Expéditeur :", email["sender"])
     print("Objet :", email["subject"])
     print("Date :", email["date"])
-    print("Aperçu :", email["body"][:250])
+    print("Longueur du corps :", len(email["body"]))
+    print("Corps complet :", repr(email["body"][:1000]))
