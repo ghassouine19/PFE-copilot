@@ -1,0 +1,30 @@
+{
+  "target_positions": [
+    "Data Engineer",
+    "AI Engineer",
+    "Data Scientist",
+    "BI/Data Analyst"
+  ],
+  "locations": [
+    "Morocco",
+    "France",
+    "remote"
+  ],
+  "technologies": [
+    "python",
+    "sql",
+    "spark",
+    "airflow",
+    "power bi",
+    "machine learning"
+  ],
+  "internship_only": false,
+  "experience_level": "",
+  "publication_days": 90,
+  "exclusion_keywords": [
+    "senior",
+    "5+ years",
+    "payant"
+  ],
+  "minimum_score": 20
+}

@@ -115,7 +115,6 @@ templates/
 config/profile.json
 cvs/
 tests/
-screenshots/README.md
 ```
 
 ## Installation
@@ -152,22 +151,4 @@ python -m pytest -v
 
 The tests cover matching, CV extraction and validation, email templates, PDF generation, CSV validation/deduplication, and SQLite persistence. Gmail API calls should be mocked in additional integration tests; no live Gmail credentials are required for the test suite.
 
-## LinkedIn demonstration screenshots
 
-No screenshots are generated or committed by the project. Run the application with realistic local demonstration data and follow [`screenshots/README.md`](screenshots/README.md) to capture:
-
-1. Dashboard overview.
-2. Job analysis and matching result.
-3. Generated editable email.
-4. Motivation-letter PDF download/preview.
-5. CSV validation and import statistics.
-6. Gmail connection and retrieved offers.
-7. Application tracking and status update.
-8. Architecture diagram.
-
-## Security notes
-
-- Do not commit `.env`, `credentials.json`, `token.json`, SQLite databases, or sensitive CV data.
-- Review every recipient, attachment, subject, and body before sending.
-- Gmail sending requires an explicit confirmation checkbox.
-- Use a test Gmail account while demonstrating OAuth and sending.
