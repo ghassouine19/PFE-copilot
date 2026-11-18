@@ -22,6 +22,13 @@ from src.database import (
     list_applications,
     update_status,
 )
+from src.database import (
+    job_stats,
+    list_jobs,
+    list_pipeline_runs,
+    list_email_logs,
+    update_application_content,
+)
 from src.email_generator import generate_email
 from src.gmail_reader import gmail_configuration_status, search_offer_emails
 from src.gmail_sender import send_application_email
@@ -32,6 +39,10 @@ from src.spontaneous_database import (
     list_spontaneous_applications,
     record_spontaneous_application,
 )
+from src.filtering import DEFAULT_PREFERENCES, load_preferences, save_preferences
+from src.ingestion import CSVConnector, RSSConnector, WebConnector, collect_and_persist
+from src.orchestration import run_pipeline, rerun_failed_job
+from src.email_automation import send_approved_application
 
 st.set_page_config(page_title="PFE Copilot", page_icon="P", layout="wide")
 init_db()
@@ -79,15 +90,17 @@ def render_dashboard() -> None:
     st.title("Dashboard")
     st.caption("Vue opérationnelle de vos candidatures et de votre activité récente.")
     stats = application_stats()
+    jobs = job_stats()
     spontaneous = list_spontaneous_applications()
     total = stats["total"] + len(spontaneous)
     drafts = stats["drafts"] + sum(item["status"] == "failed" for item in spontaneous)
     spontaneous_count = len(spontaneous)
-    cards = st.columns(4)
-    cards[0].metric("Candidatures", total)
-    cards[1].metric("Brouillons", drafts)
-    cards[2].metric("Spontanées", spontaneous_count)
-    cards[3].metric("Envoyées", stats["by_status"].get("sent", 0) + sum(item["status"] == "sent" for item in spontaneous))
+    cards = st.columns(5)
+    cards[0].metric("Offres collectées", jobs["total"])
+    cards[1].metric("Offres filtrées/matchées", jobs["by_status"].get("MATCHED", 0) + jobs["by_status"].get("PENDING_APPROVAL", 0))
+    cards[2].metric("Candidatures générées", stats["total"])
+    cards[3].metric("Candidatures envoyées", stats["by_status"].get("sent", 0) + sum(item["status"] == "sent" for item in spontaneous))
+    cards[4].metric("Doublons", jobs["duplicates"])
     st.subheader("Répartition par statut")
     status_rows = [{"Statut": STATUS_LABELS.get(key, key), "Nombre": value} for key, value in stats["by_status"].items()]
     if status_rows:
@@ -340,14 +353,153 @@ def render_tracking() -> None:
             st.success("Statut mis à jour.")
 
 
+PREFERENCES_PATH = ROOT / "data" / "preferences.json"
+
+
+def render_preferences() -> None:
+    st.title("Préférences de filtrage")
+    preferences = load_preferences(PREFERENCES_PATH)
+    with st.form("preferences_form"):
+        target = st.text_area("Postes recherchés (une ligne chacun)", "\n".join(preferences["target_positions"]), height=100)
+        locations = st.text_input("Localisations", ", ".join(preferences["locations"]))
+        technologies = st.text_input("Technologies", ", ".join(preferences["technologies"]))
+        internship = st.checkbox("Exiger un stage/PFE", preferences["internship_only"])
+        exclusions = st.text_input("Mots-clés exclus", ", ".join(preferences["exclusion_keywords"]))
+        minimum_score = st.slider("Score minimum", 0, 100, int(preferences["minimum_score"]))
+        save = st.form_submit_button("Enregistrer les préférences")
+    if save:
+        preferences.update({
+            "target_positions": [item.strip() for item in target.splitlines() if item.strip()],
+            "locations": [item.strip() for item in locations.split(",") if item.strip()],
+            "technologies": [item.strip() for item in technologies.split(",") if item.strip()],
+            "internship_only": internship,
+            "exclusion_keywords": [item.strip() for item in exclusions.split(",") if item.strip()],
+            "minimum_score": minimum_score,
+        })
+        save_preferences(PREFERENCES_PATH, preferences)
+        st.success("Préférences enregistrées.")
+
+
+def render_job_sources() -> None:
+    st.title("Sources d'offres")
+    st.caption("Connecteurs CSV, RSS et pages carrière publiques. Le respect de robots.txt est activé.")
+    tab_csv, tab_rss, tab_web = st.tabs(["CSV", "RSS", "Page carrière"])
+    with tab_csv:
+        upload = st.file_uploader("Importer un CSV d'offres", type=["csv"], key="pipeline_csv")
+        if upload and st.button("Collecter depuis CSV"):
+            stats = collect_and_persist(CSVConnector(upload, name="CSV Streamlit"))
+            st.success(f"{stats['collected']} collecte(s): {stats['processed']} nouvelles, {stats['duplicates']} doublons, {stats['invalid']} invalides.")
+    with tab_rss:
+        rss_url = st.text_input("URL du flux RSS")
+        if st.button("Collecter le RSS", disabled=not rss_url):
+            try:
+                stats = collect_and_persist(RSSConnector(rss_url))
+                st.success(f"RSS collecté: {stats['processed']} nouvelles offres.")
+            except Exception as exc:
+                st.error(str(exc))
+    with tab_web:
+        web_url = st.text_input("URL publique de la page carrière")
+        if st.button("Collecter la page", disabled=not web_url):
+            try:
+                stats = collect_and_persist(WebConnector(web_url))
+                st.success(f"Page collectée: {stats['processed']} nouvelles offres.")
+            except Exception as exc:
+                st.error(str(exc))
+
+
+def render_job_explorer() -> None:
+    st.title("Explorateur d'offres")
+    search = st.text_input("Rechercher")
+    status = st.selectbox("Statut", ["Tous", "COLLECTED", "NORMALIZED", "VALIDATED", "FILTERED", "MATCHED", "CV_SELECTED", "PENDING_APPROVAL", "REJECTED", "FAILED", "TRACKED"])
+    jobs = list_jobs(search, "" if status == "Tous" else status)
+    if not jobs:
+        st.info("Aucune offre enregistrée.")
+        return
+    st.dataframe(
+        [{"ID": item["id"], "Entreprise": item["company"], "Poste": item["title"], "Lieu": item["location"],
+          "Source": item["source_name"], "Statut": item["status"], "Doublon": "Oui" if item["is_duplicate"] else "Non"} for item in jobs],
+        hide_index=True, use_container_width=True,
+    )
+    selected_id = st.selectbox("Offre à inspecter", [item["id"] for item in jobs])
+    selected = next(item for item in jobs if item["id"] == selected_id)
+    st.subheader(selected["title"])
+    st.write("**Entreprise:**", selected["company"])
+    st.write("**Lieu:**", selected["location"] or "Non renseigné")
+    st.write(selected["description"][:5000])
+
+
+def render_pipeline_monitor() -> None:
+    st.title("Moniteur de pipeline")
+    preferences = load_preferences(PREFERENCES_PATH)
+    if st.button("Exécuter le pipeline", type="primary"):
+        result = run_pipeline(preferences=preferences)
+        st.success(f"Exécution #{result['run_id']} terminée.")
+        st.json(result["statistics"])
+    runs, tasks = list_pipeline_runs()
+    if runs:
+        st.dataframe(runs, hide_index=True, use_container_width=True)
+    if tasks:
+        st.subheader("Dernières tâches")
+        st.dataframe(tasks, hide_index=True, use_container_width=True)
+    failed_jobs = [job for job in list_jobs(limit=10000) if job["status"] in {"FAILED", "REJECTED"}]
+    if failed_jobs:
+        selected = st.selectbox("Offre à relancer", [job["id"] for job in failed_jobs])
+        if st.button("Relancer"):
+            result = rerun_failed_job(selected)
+            st.success("Relance enregistrée." if result["status"] == "SUCCESS" else result.get("error", "Relance échouée"))
+
+
+def render_approval_center() -> None:
+    st.title("Centre d'approbation")
+    pending = list_applications(status="draft")
+    if not pending:
+        st.info("Aucune candidature en attente.")
+        return
+    selected_id = st.selectbox("Candidature", [item["id"] for item in pending])
+    application = get_application(selected_id)
+    if not application:
+        return
+    st.write("**Entreprise:**", application["company"])
+    st.write("**Poste:**", application["title"])
+    recipient = st.text_input("Destinataire vérifié", value=application["recipient"], key=f"recipient_{selected_id}")
+    subject = st.text_input("Objet", value=application["subject"], key=f"subject_{selected_id}")
+    body = st.text_area("Email", value=application["body"], height=260, key=f"body_{selected_id}")
+    if st.button("Approuver"):
+        update_application_content(selected_id, recipient, subject, body)
+        update_status(selected_id, "approved")
+        st.success("Candidature approuvée.")
+    if st.button("Envoyer après confirmation", type="primary"):
+        try:
+            update_application_content(selected_id, recipient, subject, body)
+            message_id = send_approved_application(selected_id, explicit_confirmation=True)
+            st.success(f"Envoyée: {message_id}")
+        except Exception as exc:
+            st.error(str(exc))
+
+
 st.sidebar.title("PFE Copilot")
 st.sidebar.caption("Assistant de candidature PFE")
-page = st.sidebar.radio("Navigation", ["Dashboard", "Nouvelle candidature", "CV management", "Générateurs", "Import CSV", "Gmail", "Candidature spontanée", "Suivi"])
+page = st.sidebar.radio("Navigation", [
+    "Dashboard", "Sources d'offres", "Explorateur d'offres",
+    "Préférences", "Nouvelle candidature", "Centre d'approbation",
+    "Moniteur pipeline", "CV management", "Générateurs",
+    "Import CSV", "Gmail", "Candidature spontanée", "Suivi",
+])
 st.sidebar.divider()
 st.sidebar.caption("Données locales SQLite · Aucun envoi sans confirmation")
 
 if page == "Dashboard":
     render_dashboard()
+elif page == "Sources d'offres":
+    render_job_sources()
+elif page == "Explorateur d'offres":
+    render_job_explorer()
+elif page == "Préférences":
+    render_preferences()
+elif page == "Centre d'approbation":
+    render_approval_center()
+elif page == "Moniteur pipeline":
+    render_pipeline_monitor()
 elif page == "Nouvelle candidature":
     render_matching()
 elif page == "CV management":

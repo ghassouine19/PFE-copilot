@@ -32,6 +32,72 @@ flowchart LR
     Gmail --> Google[Gmail API]
 ```
 
+## End-to-end pipeline
+
+```mermaid
+flowchart TD
+    A[Job sources] --> B[Ingestion]
+    B --> C[Raw jobs]
+    C --> D[Normalization and validation]
+    D --> E[Deduplication]
+    E --> F[Configurable filtering]
+    F --> G[Keyword and TF-IDF matching]
+    G --> H[Optional semantic matching]
+    H --> I[CV selection]
+    I --> J[Email and PDF generation]
+    J --> K[Approval center]
+    K -->|explicit confirmation| L[Gmail sending]
+    L --> M[SQLite application tracking]
+```
+
+The orchestrator persists jobs and stage tasks in SQLite and supports manual execution,
+retrying temporary failures and rerunning individual failed jobs. The stages are:
+`COLLECTED`, `NORMALIZED`, `VALIDATED`, `FILTERED`, `MATCHED`, `CV_SELECTED`,
+`APPLICATION_GENERATED`, `PENDING_APPROVAL`, `SENT`, `TRACKED`, plus `REJECTED`,
+`FAILED`, and `DUPLICATE`.
+
+### Implemented ingestion
+
+- Existing CSV ingestion, including the Streamlit CSV connector.
+- RSS feeds through `RSSConnector`.
+- Public career pages through `WebConnector` and BeautifulSoup.
+- Existing Gmail offer reader.
+- `robots.txt` checks for RSS and web connectors.
+- Raw payload persistence and incremental processed-job storage.
+
+Web scraping is intentionally limited to permitted public pages and does not bypass
+authentication or CAPTCHA. Playwright is not required for pages that do not need
+JavaScript rendering.
+
+### Matching methodology
+
+The baseline is explicitly non-semantic: normalized keyword matching and
+TF-IDF/cosine similarity between an offer and each configured profile. An optional
+Sentence Transformers implementation is available in `src/semantic_matching.py`;
+if the model or library is unavailable, the system falls back to the local lexical
+baseline. The UI reports the matching method, score, role, matched/missing skills,
+and explanation.
+
+### Database design
+
+The existing `applications` table remains compatible. New SQLite tables include
+`job_sources`, `raw_jobs`, `jobs`, `job_skills`, `candidate_profiles`,
+`matching_results`, `application_documents`, `pipeline_runs`, `pipeline_tasks`,
+and `email_logs`.
+
+### Email safety
+
+Gmail remains approval-first. Sending requires:
+
+1. An explicit confirmation call from the UI.
+2. A verified non-empty recipient.
+3. An existing CV and generated motivation-letter PDF.
+4. No existing successful send for the application.
+5. Optional exact-recipient allowlisting with `EMAIL_RECIPIENT_ALLOWLIST`.
+
+Set `AUTOMATED_SENDING_ENABLED=true` only to explicitly enable controlled
+automation. The default is disabled.
+
 ```text
 app.py
 src/
