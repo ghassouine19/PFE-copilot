@@ -12,7 +12,7 @@ def send_application_email(
     subject: str,
     body: str,
     cv_path: str,
-    cover_letter_pdf: bytes | None = None,
+    cover_letter_pdf: bytes,
 ) -> str:
     """
     Envoie un e-mail avec le CV et la lettre de motivation en PDF.
@@ -52,13 +52,12 @@ def send_application_email(
         filename=cv.name,
     )
 
-    if cover_letter_pdf:
-        message.add_attachment(
-            cover_letter_pdf,
-            maintype="application",
-            subtype="pdf",
-            filename="Lettre_de_motivation_PFE.pdf",
-        )
+    message.add_attachment(
+        cover_letter_pdf,
+        maintype="application",
+        subtype="pdf",
+        filename="Lettre_de_motivation_PFE.pdf",
+    )
 
     raw_message = base64.urlsafe_b64encode(
         message.as_bytes()

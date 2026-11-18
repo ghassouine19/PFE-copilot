@@ -13,8 +13,6 @@ client_secret*.json
 *.sqlite
 *.sqlite3
 data/*.db
-cvs/*.pdf
-*.pdf
 .DS_Store
 .idea/
 .vscode/
