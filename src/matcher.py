@@ -4,8 +4,7 @@ import re
 import unicodedata
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-PROFILE_PATH = ROOT / "config" / "profile.json"
+from src.config import PROFILE_PATH
 
 
 def normalize(text: str) -> str:
@@ -32,7 +31,7 @@ def match_offer(title: str, description: str) -> dict:
         scores[role_id] = len(matches) / max(len(keywords), 1)
         matched_by_role[role_id] = matches
 
-    best_role = max(scores, key=scores.get)
+    best_role = max(scores, key=lambda role_id: (scores[role_id], len(matched_by_role[role_id])))
     matched = matched_by_role[best_role]
 
     is_pfe = any(
@@ -52,5 +51,10 @@ def match_offer(title: str, description: str) -> dict:
         "role_label": profile["roles"][best_role]["label"],
         "score": score,
         "is_pfe": is_pfe,
-        "matched_keywords": matched
+        "matched_keywords": matched,
+        "explanation": (
+            f"Le profil {profile['roles'][best_role]['label']} a été retenu "
+            f"car {len(matched)} mot(s)-clé(s) de ce profil apparaissent dans l'offre."
+        ),
+        "scores": scores,
     }
