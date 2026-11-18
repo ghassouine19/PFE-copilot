@@ -153,21 +153,6 @@ def inject_brand_styles() -> None:
       .status-pill { border-radius:999px; padding:5px 9px; font-size:10px; font-weight:800; background:#eef0ff; color:#5b67f1; }
       .status-pill.sent { background:#e8f7f1; color:#13856f; }
       .status-pill.rejected { background:#fff0ec; color:#d95f45; }
-      .slide-frame { background:#0d1526; border-radius:18px; padding:24px; border:1px solid #1e2a40; }
-      .slide-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; }
-      .slide-thumb {
-        aspect-ratio: 4/5;
-        border-radius:10px;
-        background:linear-gradient(145deg,#111b30,#17253d);
-        padding:14px;
-        color:white;
-        border:1px solid rgba(255,255,255,.08);
-        overflow:hidden;
-      }
-      .slide-thumb strong { display:block; font-size:12px; margin:14px 0 7px; }
-      .slide-thumb span { color:#9eabc0; font-size:9px; }
-      .slide-thumb.accent { background:linear-gradient(145deg,#5b67f1,#777ff8); }
-      .slide-thumb.accent span { color:#e3e5ff; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -519,72 +504,6 @@ def render_tracking() -> None:
             st.success("Statut mis à jour.")
 
 
-def render_linkedin() -> None:
-    st.markdown("""
-    <div class="brand-card">
-      <div class="brand-eyebrow">Communication · LinkedIn</div>
-      <div class="brand-title">Le projet en 5 slides</div>
-      <div class="brand-copy">Un carrousel premium pour raconter PFE Copilot, montrer son impact et lancer la conversation.</div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.write("")
-
-    slide = st.radio(
-        "Choisir une slide",
-        [f"Slide {index}" for index in range(1, 6)],
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    index = int(slide[-1])
-    slides = [
-        ("01", "PFE COPILOT", "J’ai automatisé ma recherche de stage.", "Du signalement d’une offre jusqu’au suivi de candidature."),
-        ("02", "LE PROBLÈME", "Chercher chaque offre prend du temps.", "Filtrer, comparer, personnaliser, envoyer, relancer… puis recommencer."),
-        ("03", "LA SOLUTION", "Un seul pipeline intelligent.", "Collecte · Matching · CV · Email · Approbation · Suivi"),
-        ("04", "L’IMPACT", "Moins d’opérations. Plus de contrôle.", "Une interface claire, des documents personnalisés et aucun envoi sans confirmation."),
-        ("05", "LE PROJET", "PFE Copilot est prêt à évoluer.", "Java · Python · Streamlit · SQLite · Gmail API · IA"),
-    ]
-    number, eyebrow, title, copy = slides[index - 1]
-    accent = "accent" if index in (1, 4) else ""
-    st.markdown(
-        f'<div class="slide-frame"><div class="slide-thumb {accent}" '
-        'style="width:360px;aspect-ratio:4/5;margin:auto;padding:42px;display:flex;flex-direction:column;justify-content:space-between;">'
-        f'<div style="color:#aab5c7;font-size:14px;font-weight:800;">{number} / 05</div>'
-        f'<div><div style="color:#9eabc0;font-size:12px;font-weight:800;letter-spacing:.12em;">{eyebrow}</div>'
-        f'<strong style="font-size:28px;line-height:1.15;margin:16px 0 12px;">{title}</strong>'
-        f'<span style="font-size:13px;line-height:1.55;">{copy}</span></div>'
-        f'<div style="color:#dbe4f0;font-size:11px;">PFE COPILOT · 2026</div></div></div>',
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        st.markdown("#### Caption LinkedIn")
-        st.code(
-            "Je cherchais à rendre ma recherche de PFE plus rapide, plus structurée et surtout plus personnelle.\n\n"
-            "PFE Copilot centralise les offres, analyse le profil, sélectionne le bon CV, génère les documents "
-            "et permet de suivre chaque candidature.\n\n"
-            "L’objectif n’est pas d’envoyer plus vite sans réfléchir. C’est de garder le contrôle tout en supprimant "
-            "les tâches répétitives.\n\n"
-            "Stack : Python, Streamlit, SQLite, Gmail API\n\n#PFE #Python #IA #Data #Automatisation",
-            language="markdown",
-        )
-    with c2:
-        st.markdown("#### Miniatures")
-        thumbs = "".join(
-            f'<div class="slide-thumb {"accent" if i in (1,4) else ""}"><span>{i:02d}</span>'
-            f'<strong>{title}</strong></div>'
-            for i, (_, _, title, _) in enumerate(slides, start=1)
-        )
-        st.markdown(f'<div class="slide-grid">{thumbs}</div>', unsafe_allow_html=True)
-        assets = Path("assets/linkedin")
-        png_count = len(list(assets.glob("slide-*.png"))) if assets.exists() else 0
-        if png_count:
-            st.success(f"{png_count} visuels LinkedIn 1080 × 1350 disponibles dans assets/linkedin/")
-        else:
-            st.info("Générez les PNG avec scripts/generate_linkedin_slides.py.")
-
-
 PREFERENCES_PATH = ROOT / "data" / "preferences.json"
 
 
@@ -712,7 +631,7 @@ def render_approval_center() -> None:
 st.sidebar.title("PFE Copilot")
 st.sidebar.caption("Assistant de candidature PFE")
 page = st.sidebar.radio("Navigation", [
-    "Dashboard", "LinkedIn · Slides", "Sources d'offres", "Explorateur d'offres",
+    "Dashboard", "Sources d'offres", "Explorateur d'offres",
     "Préférences", "Nouvelle candidature", "Centre d'approbation",
     "Moniteur pipeline", "CV management", "Générateurs",
     "Import CSV", "Gmail", "Candidature spontanée", "Suivi",
@@ -722,8 +641,6 @@ st.sidebar.caption("Données locales SQLite · Aucun envoi sans confirmation")
 
 if page == "Dashboard":
     render_dashboard()
-elif page == "LinkedIn · Slides":
-    render_linkedin()
 elif page == "Sources d'offres":
     render_job_sources()
 elif page == "Explorateur d'offres":
