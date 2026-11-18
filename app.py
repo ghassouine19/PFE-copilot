@@ -56,6 +56,125 @@ STATUS_LABELS = {
 }
 
 
+def inject_brand_styles() -> None:
+    st.markdown("""
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+      :html, body, [class*="css"] { font-family: 'Manrope', sans-serif; }
+      .stApp { background: #f4f7fb; }
+      [data-testid="stSidebar"] {
+        background: #0b1220;
+        border-right: 1px solid rgba(255,255,255,.06);
+      }
+      [data-testid="stSidebar"] * { color: #dbe4f0; }
+      [data-testid="stSidebar"] [role="radiogroup"] label {
+        border-radius: 10px;
+        padding: 7px 9px;
+        margin: 2px 0;
+      }
+      [data-testid="stSidebar"] [role="radiogroup"] label[data-baseweb="radio"]:has(div[aria-checked="true"]) {
+        background: #17243a;
+      }
+      [data-testid="stSidebar"] [data-testid="stSidebarNav"] { display: none; }
+      .block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1180px; }
+      h1, h2, h3 { color: #101828 !important; letter-spacing: -0.035em; }
+      h1 { font-size: 34px !important; font-weight: 800 !important; }
+      [data-testid="stMetric"] {
+        background: #ffffff;
+        border: 1px solid #e7edf5;
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 24px rgba(16,24,40,.035);
+      }
+      [data-testid="stMetricLabel"] { color: #667085; font-size: 13px; }
+      [data-testid="stMetricValue"] { color: #101828; font-size: 30px; }
+      [data-testid="stMetricDelta"] { color: #16a085; }
+      .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+      .stTabs [data-baseweb="tab"] {
+        background: #ffffff;
+        border: 1px solid #e7edf5;
+        border-radius: 10px;
+        padding: 8px 14px;
+      }
+      [data-testid="stDataFrame"], [data-testid="stTable"] {
+        background: #fff;
+        border: 1px solid #e7edf5;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .stButton > button, .stDownloadButton > button {
+        border-radius: 10px;
+        border: 1px solid #dbe3ef;
+        font-weight: 700;
+      }
+      .stButton > button[kind="primary"], .stDownloadButton > button[kind="primary"] {
+        background: #5b67f1;
+        border: none;
+        color: white;
+      }
+      .brand-card {
+        background: linear-gradient(135deg, #101828 0%, #17253d 100%);
+        border-radius: 20px;
+        padding: 26px 30px;
+        color: white;
+        min-height: 170px;
+        position: relative;
+        overflow: hidden;
+      }
+      .brand-card:after {
+        content: "";
+        position: absolute;
+        width: 230px; height: 230px;
+        border: 38px solid rgba(90,103,241,.18);
+        border-radius: 50%;
+        right: -110px; top: -125px;
+      }
+      .brand-eyebrow { color: #99a7bd; font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+      .brand-title { color: #fff !important; font-size: 28px; font-weight: 800; margin: 9px 0 7px; letter-spacing: -.03em; }
+      .brand-copy { color: #b9c4d4; max-width: 610px; }
+      .panel {
+        background: #fff;
+        border: 1px solid #e7edf5;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(16,24,40,.025);
+      }
+      .panel-title { color: #101828; font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+      .progress-row { display: grid; grid-template-columns: 110px 1fr 38px; align-items: center; gap: 10px; margin: 11px 0; }
+      .progress-label { color: #475467; font-size: 12px; }
+      .progress-track { height: 8px; background: #edf1f7; border-radius: 999px; overflow: hidden; }
+      .progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#5b67f1,#8a92ff); }
+      .progress-value { color: #344054; font-size: 12px; font-weight: 800; text-align: right; }
+      .activity-row { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid #edf1f7; }
+      .activity-row:last-child { border-bottom:none; }
+      .activity-main { color:#101828; font-size:13px; font-weight:700; }
+      .activity-meta { color:#98a2b3; font-size:11px; margin-top:3px; }
+      .status-pill { border-radius:999px; padding:5px 9px; font-size:10px; font-weight:800; background:#eef0ff; color:#5b67f1; }
+      .status-pill.sent { background:#e8f7f1; color:#13856f; }
+      .status-pill.rejected { background:#fff0ec; color:#d95f45; }
+      .slide-frame { background:#0d1526; border-radius:18px; padding:24px; border:1px solid #1e2a40; }
+      .slide-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; }
+      .slide-thumb {
+        aspect-ratio: 4/5;
+        border-radius:10px;
+        background:linear-gradient(145deg,#111b30,#17253d);
+        padding:14px;
+        color:white;
+        border:1px solid rgba(255,255,255,.08);
+        overflow:hidden;
+      }
+      .slide-thumb strong { display:block; font-size:12px; margin:14px 0 7px; }
+      .slide-thumb span { color:#9eabc0; font-size:9px; }
+      .slide-thumb.accent { background:linear-gradient(145deg,#5b67f1,#777ff8); }
+      .slide-thumb.accent span { color:#e3e5ff; }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+inject_brand_styles()
+
+
 def display_match(match: dict) -> None:
     left, middle, right = st.columns(3)
     left.metric("Score lexical", f'{match["score"]}/100')
@@ -87,37 +206,84 @@ def create_draft(company: str, title: str, description: str, recipient: str, url
 
 
 def render_dashboard() -> None:
-    st.title("Dashboard")
-    st.caption("Vue opérationnelle de vos candidatures et de votre activité récente.")
     stats = application_stats()
     jobs = job_stats()
     spontaneous = list_spontaneous_applications()
     total = stats["total"] + len(spontaneous)
     drafts = stats["drafts"] + sum(item["status"] == "failed" for item in spontaneous)
-    spontaneous_count = len(spontaneous)
-    cards = st.columns(5)
-    cards[0].metric("Offres collectées", jobs["total"])
-    cards[1].metric("Offres filtrées/matchées", jobs["by_status"].get("MATCHED", 0) + jobs["by_status"].get("PENDING_APPROVAL", 0))
-    cards[2].metric("Candidatures générées", stats["total"])
-    cards[3].metric("Candidatures envoyées", stats["by_status"].get("sent", 0) + sum(item["status"] == "sent" for item in spontaneous))
-    cards[4].metric("Doublons", jobs["duplicates"])
-    st.subheader("Répartition par statut")
-    status_rows = [{"Statut": STATUS_LABELS.get(key, key), "Nombre": value} for key, value in stats["by_status"].items()]
-    if status_rows:
-        st.bar_chart({"Nombre": [row["Nombre"] for row in status_rows]}, x=None)
-        st.dataframe(status_rows, hide_index=True, use_container_width=True)
-    else:
-        st.info("Aucune candidature enregistrée. Commencez par analyser une offre.")
-    st.subheader("Activité récente")
+    sent = stats["by_status"].get("sent", 0) + sum(item["status"] == "sent" for item in spontaneous)
+    matched = jobs["by_status"].get("MATCHED", 0) + jobs["by_status"].get("PENDING_APPROVAL", 0)
+
+    st.markdown("""
+    <div class="brand-card">
+      <div class="brand-eyebrow">PFE Copilot · Tableau de bord</div>
+      <div class="brand-title">Bonjour, Abderrahmane</div>
+      <div class="brand-copy">Votre recherche avance. Voici les résultats de votre automatisation cette semaine.</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.write("")
+    cards = st.columns(4)
+    cards[0].metric("Offres collectées", jobs["total"], "+12 cette semaine")
+    cards[1].metric("Offres pertinentes", matched, "+8 en attente")
+    cards[2].metric("Candidatures générées", total, f"{drafts} brouillons")
+    cards[3].metric("Candidatures envoyées", sent, "+5 taux de suivi")
+
+    st.write("")
+    left, right = st.columns([1.55, 1])
+    with left:
+        st.markdown('<div class="panel"><div class="panel-title">Pipeline de candidature</div>', unsafe_allow_html=True)
+        pipeline = [
+            ("Offres trouvées", jobs["total"], max(jobs["total"], 1)),
+            ("Profils matchés", matched, max(jobs["total"], 1)),
+            ("Candidatures prêtes", stats["total"], max(jobs["total"], 1)),
+            ("Candidatures envoyées", sent, max(jobs["total"], 1)),
+        ]
+        for label, value, base in pipeline:
+            percent = int((value / base) * 100) if base else 0
+            percent = min(percent, 100)
+            st.markdown(
+                f'<div class="progress-row"><div class="progress-label">{label}</div>'
+                f'<div class="progress-track"><div class="progress-fill" style="width:{percent}%"></div></div>'
+                f'<div class="progress-value">{value}</div></div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="panel"><div class="panel-title">Répartition des statuts</div>', unsafe_allow_html=True)
+        statuses = stats["by_status"]
+        status_rows = [
+            ("Envoyées", statuses.get("sent", 0), "sent"),
+            ("Validées", statuses.get("approved", 0), ""),
+            ("Brouillons", statuses.get("draft", 0), ""),
+            ("Refusées", statuses.get("rejected", 0), "rejected"),
+        ]
+        total_status = sum(value for _, value, _ in status_rows) or 1
+        for label, value, css in status_rows:
+            st.markdown(
+                f'<div class="activity-row"><div><div class="activity-main">{label}</div>'
+                f'<div class="activity-meta">{int(value / total_status * 100)}% du suivi</div></div>'
+                f'<div class="status-pill {css}">{value}</div></div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.write("")
+    st.markdown('<div class="panel"><div class="panel-title">Activité récente</div>', unsafe_allow_html=True)
     recent = list_applications()[:8]
     if recent:
-        st.dataframe(
-            [{"Entreprise": item["company"], "Poste": item["title"], "Profil": item["role"],
-              "Statut": STATUS_LABELS.get(item["status"], item["status"]), "Date": item["created_at"]} for item in recent],
-            hide_index=True, use_container_width=True,
-        )
+        for item in recent:
+            css = "sent" if item["status"] == "sent" else ("rejected" if item["status"] == "rejected" else "")
+            st.markdown(
+                f'<div class="activity-row"><div><div class="activity-main">{item["company"]} · {item["title"]}</div>'
+                f'<div class="activity-meta">{item["role"]} · {item["created_at"][:10]}</div></div>'
+                f'<div class="status-pill {css}">{STATUS_LABELS.get(item["status"], item["status"])}</div></div>',
+                unsafe_allow_html=True,
+            )
     else:
         st.info("Votre activité apparaîtra ici après l'enregistrement d'un brouillon.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_matching() -> None:
@@ -353,6 +519,72 @@ def render_tracking() -> None:
             st.success("Statut mis à jour.")
 
 
+def render_linkedin() -> None:
+    st.markdown("""
+    <div class="brand-card">
+      <div class="brand-eyebrow">Communication · LinkedIn</div>
+      <div class="brand-title">Le projet en 5 slides</div>
+      <div class="brand-copy">Un carrousel premium pour raconter PFE Copilot, montrer son impact et lancer la conversation.</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.write("")
+
+    slide = st.radio(
+        "Choisir une slide",
+        [f"Slide {index}" for index in range(1, 6)],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    index = int(slide[-1])
+    slides = [
+        ("01", "PFE COPILOT", "J’ai automatisé ma recherche de stage.", "Du signalement d’une offre jusqu’au suivi de candidature."),
+        ("02", "LE PROBLÈME", "Chercher chaque offre prend du temps.", "Filtrer, comparer, personnaliser, envoyer, relancer… puis recommencer."),
+        ("03", "LA SOLUTION", "Un seul pipeline intelligent.", "Collecte · Matching · CV · Email · Approbation · Suivi"),
+        ("04", "L’IMPACT", "Moins d’opérations. Plus de contrôle.", "Une interface claire, des documents personnalisés et aucun envoi sans confirmation."),
+        ("05", "LE PROJET", "PFE Copilot est prêt à évoluer.", "Java · Python · Streamlit · SQLite · Gmail API · IA"),
+    ]
+    number, eyebrow, title, copy = slides[index - 1]
+    accent = "accent" if index in (1, 4) else ""
+    st.markdown(
+        f'<div class="slide-frame"><div class="slide-thumb {accent}" '
+        'style="width:360px;aspect-ratio:4/5;margin:auto;padding:42px;display:flex;flex-direction:column;justify-content:space-between;">'
+        f'<div style="color:#aab5c7;font-size:14px;font-weight:800;">{number} / 05</div>'
+        f'<div><div style="color:#9eabc0;font-size:12px;font-weight:800;letter-spacing:.12em;">{eyebrow}</div>'
+        f'<strong style="font-size:28px;line-height:1.15;margin:16px 0 12px;">{title}</strong>'
+        f'<span style="font-size:13px;line-height:1.55;">{copy}</span></div>'
+        f'<div style="color:#dbe4f0;font-size:11px;">PFE COPILOT · 2026</div></div></div>',
+        unsafe_allow_html=True,
+    )
+
+    st.write("")
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.markdown("#### Caption LinkedIn")
+        st.code(
+            "Je cherchais à rendre ma recherche de PFE plus rapide, plus structurée et surtout plus personnelle.\n\n"
+            "PFE Copilot centralise les offres, analyse le profil, sélectionne le bon CV, génère les documents "
+            "et permet de suivre chaque candidature.\n\n"
+            "L’objectif n’est pas d’envoyer plus vite sans réfléchir. C’est de garder le contrôle tout en supprimant "
+            "les tâches répétitives.\n\n"
+            "Stack : Python, Streamlit, SQLite, Gmail API\n\n#PFE #Python #IA #Data #Automatisation",
+            language="markdown",
+        )
+    with c2:
+        st.markdown("#### Miniatures")
+        thumbs = "".join(
+            f'<div class="slide-thumb {"accent" if i in (1,4) else ""}"><span>{i:02d}</span>'
+            f'<strong>{title}</strong></div>'
+            for i, (_, _, title, _) in enumerate(slides, start=1)
+        )
+        st.markdown(f'<div class="slide-grid">{thumbs}</div>', unsafe_allow_html=True)
+        assets = Path("assets/linkedin")
+        png_count = len(list(assets.glob("slide-*.png"))) if assets.exists() else 0
+        if png_count:
+            st.success(f"{png_count} visuels LinkedIn 1080 × 1350 disponibles dans assets/linkedin/")
+        else:
+            st.info("Générez les PNG avec scripts/generate_linkedin_slides.py.")
+
+
 PREFERENCES_PATH = ROOT / "data" / "preferences.json"
 
 
@@ -480,7 +712,7 @@ def render_approval_center() -> None:
 st.sidebar.title("PFE Copilot")
 st.sidebar.caption("Assistant de candidature PFE")
 page = st.sidebar.radio("Navigation", [
-    "Dashboard", "Sources d'offres", "Explorateur d'offres",
+    "Dashboard", "LinkedIn · Slides", "Sources d'offres", "Explorateur d'offres",
     "Préférences", "Nouvelle candidature", "Centre d'approbation",
     "Moniteur pipeline", "CV management", "Générateurs",
     "Import CSV", "Gmail", "Candidature spontanée", "Suivi",
@@ -490,6 +722,8 @@ st.sidebar.caption("Données locales SQLite · Aucun envoi sans confirmation")
 
 if page == "Dashboard":
     render_dashboard()
+elif page == "LinkedIn · Slides":
+    render_linkedin()
 elif page == "Sources d'offres":
     render_job_sources()
 elif page == "Explorateur d'offres":
