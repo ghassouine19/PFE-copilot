@@ -1,6 +1,10 @@
 
 import base64
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -10,8 +14,12 @@ from googleapiclient.discovery import build
 from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[1]
-CREDENTIALS_FILE = ROOT / "credentials.json"
-TOKEN_FILE = ROOT / "token.json"
+CREDENTIALS_FILE = Path(os.getenv("GMAIL_CREDENTIALS_FILE", ROOT / "credentials.json"))
+if not CREDENTIALS_FILE.is_absolute():
+    CREDENTIALS_FILE = ROOT / CREDENTIALS_FILE
+TOKEN_FILE = Path(os.getenv("GMAIL_TOKEN_FILE", ROOT / "token.json"))
+if not TOKEN_FILE.is_absolute():
+    TOKEN_FILE = ROOT / TOKEN_FILE
 
 
 SCOPES = [
@@ -44,9 +52,19 @@ def get_gmail_service():
             )
             creds = flow.run_local_server(port=0)
 
+        TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
         TOKEN_FILE.write_text(creds.to_json(), encoding="utf-8")
+        try:
+            TOKEN_FILE.chmod(0o600)
+        except OSError:
+            pass
 
     return build("gmail", "v1", credentials=creds)
+
+
+def get_gmail_profile() -> dict:
+    service = get_gmail_service()
+    return service.users().getProfile(userId="me").execute()
 
 
 

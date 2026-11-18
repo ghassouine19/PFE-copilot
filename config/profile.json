@@ -4,7 +4,13 @@
     "degree": "Master BD2C - Big Data & Cloud Computing",
     "location": "Casablanca, Maroc",
     "target": "PFE",
-    "languages": ["fr", "en"]
+    "languages": ["fr", "en"],
+    "name": "Abderrahmane Ghassouine",
+    "skills": [
+      "python", "sql", "spark", "hadoop", "airflow", "etl", "data engineering",
+      "big data", "cloud", "docker", "git", "power bi", "machine learning",
+      "scikit-learn", "data science", "pandas", "mongodb", "postgresql"
+    ]
   },
   "roles": {
     "data_engineer": {
