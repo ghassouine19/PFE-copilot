@@ -2,6 +2,7 @@
 import base64
 from pathlib import Path
 
+from src.config import CREDENTIALS_FILE, TOKEN_FILE
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -47,6 +48,14 @@ def get_gmail_service():
         TOKEN_FILE.write_text(creds.to_json(), encoding="utf-8")
 
     return build("gmail", "v1", credentials=creds)
+
+
+def gmail_configuration_status() -> dict:
+    return {
+        "credentials_available": CREDENTIALS_FILE.exists(),
+        "token_available": TOKEN_FILE.exists(),
+        "connected": TOKEN_FILE.exists(),
+    }
 
 
 

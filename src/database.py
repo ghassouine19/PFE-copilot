@@ -1,9 +1,7 @@
 
 import sqlite3
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "data" / "pfe_copilot.db"
+from src.config import DB_PATH
 
 
 def connect():
@@ -52,13 +50,46 @@ def add_application(data: dict) -> int:
         return cursor.lastrowid
 
 
-def list_applications():
+def list_applications(search: str = "", status: str = ""):
     with connect() as conn:
-        return [
-            dict(row) for row in conn.execute(
-                "SELECT * FROM applications ORDER BY id DESC"
+        clauses = []
+        params = []
+        if search.strip():
+            clauses.append("(company LIKE ? OR title LIKE ? OR role LIKE ?)")
+            term = f"%{search.strip()}%"
+            params.extend([term, term, term])
+        if status:
+            clauses.append("status = ?")
+            params.append(status)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        rows = conn.execute(
+            f"SELECT * FROM applications {where} ORDER BY id DESC", params
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_application(application_id: int):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM applications WHERE id = ?", (application_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def application_stats() -> dict:
+    with connect() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM applications").fetchone()[0]
+        drafts = conn.execute("SELECT COUNT(*) FROM applications WHERE status = 'draft'").fetchone()[0]
+        spontaneous = conn.execute(
+            "SELECT COUNT(*) FROM applications WHERE recipient = ''"
+        ).fetchone()[0]
+        by_status = {
+            row["status"]: row["count"]
+            for row in conn.execute(
+                "SELECT status, COUNT(*) AS count FROM applications GROUP BY status"
             ).fetchall()
-        ]
+        }
+        return {"total": total, "drafts": drafts, "spontaneous": spontaneous, "by_status": by_status}
 
 
 def update_status(application_id: int, status: str):

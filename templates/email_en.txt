@@ -1,0 +1,10 @@
+Dear Recruitment Team,
+
+I am currently pursuing a Master's degree in Big Data & Cloud Computing (BD2C), and I would like to apply for a final-year internship opportunity in {role} at {company}.
+
+My background includes data engineering, SQL, data processing and cloud-oriented projects. I would welcome the opportunity to contribute to your team and further develop my skills.
+
+Please find my CV attached for your consideration. I would be happy to discuss my application with you.
+
+Kind regards,
+{candidate}

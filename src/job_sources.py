@@ -51,7 +51,7 @@ def load_offers_csv(file) -> list[dict]:
             for key, value in row.items()
         }
 
-        if not offer["company"] or not offer["title"]:
+        if not offer["company"] or not offer["title"] or not offer["description"]:
             continue
 
         offer["offer_id"] = make_offer_id(offer)
@@ -63,3 +63,24 @@ def load_offers_csv(file) -> list[dict]:
         offers.append(offer)
 
     return offers
+
+
+def import_stats(file) -> dict:
+    df = pd.read_csv(file).fillna("")
+    missing = REQUIRED_COLUMNS - set(df.columns)
+    if missing:
+        raise ValueError(f"Colonnes manquantes : {', '.join(sorted(missing))}")
+    valid_rows = sum(
+        bool(str(row["company"]).strip() and str(row["title"]).strip() and str(row["description"]).strip())
+        for _, row in df.iterrows()
+    )
+    if hasattr(file, "seek"):
+        file.seek(0)
+    offers = load_offers_csv(file)
+    return {
+        "total_rows": len(df),
+        "valid_rows": valid_rows,
+        "invalid_rows": len(df) - valid_rows,
+        "duplicates": valid_rows - len(offers),
+        "offers": offers,
+    }

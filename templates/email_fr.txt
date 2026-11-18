@@ -1,0 +1,10 @@
+Bonjour,
+
+Actuellement étudiant en Master Big Data & Cloud Computing (BD2C), je souhaite vous proposer ma candidature pour une opportunité en {role} au sein de {company}.
+
+Mon parcours comprend des projets autour de l'ingénierie des données, de SQL, du traitement de données et des technologies cloud. Je souhaiterais mettre ces compétences au service de votre équipe et les approfondir dans un contexte professionnel.
+
+Vous trouverez mon CV en pièce jointe. Je reste à votre disposition pour échanger sur ma candidature.
+
+Cordialement,
+{candidate}

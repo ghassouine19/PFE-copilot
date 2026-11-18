@@ -13,6 +13,7 @@ from reportlab.platypus import (
     Spacer,
     HRFlowable,
 )
+from datetime import date
 
 
 def generate_cover_letter(
@@ -73,7 +74,13 @@ distinguées.
 {candidate}"""
 
 
-def create_cover_letter_pdf(letter_text: str) -> bytes:
+def create_cover_letter_pdf(
+    letter_text: str,
+    candidate: str = "",
+    company: str = "",
+    position: str = "",
+    generated_date: date | None = None,
+) -> bytes:
     """Crée un PDF en mémoire, prêt à être joint à un e-mail."""
 
     buffer = BytesIO()
@@ -112,8 +119,19 @@ def create_cover_letter_pdf(letter_text: str) -> bytes:
         alignment=0,
     )
 
-    story = [
-        Paragraph("LETTRE DE MOTIVATION", title_style),
+    story = [Paragraph("LETTRE DE MOTIVATION", title_style)]
+    metadata = [
+        value for value in (
+            candidate.strip(),
+            company.strip(),
+            position.strip(),
+            (generated_date or date.today()).strftime("%d/%m/%Y"),
+        ) if value
+    ]
+    if metadata:
+        story.append(Paragraph(" · ".join(escape(value) for value in metadata), body_style))
+        story.append(Spacer(1, 8))
+    story.extend([
         Spacer(1, 8),
         HRFlowable(
             width="100%",
@@ -121,7 +139,7 @@ def create_cover_letter_pdf(letter_text: str) -> bytes:
             color=colors.HexColor("#B7C9E2"),
         ),
         Spacer(1, 24),
-    ]
+    ])
 
     for paragraph in letter_text.split("\n\n"):
         safe_text = escape(paragraph).replace("\n", "<br/>")
